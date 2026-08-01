@@ -1,16 +1,16 @@
-\# STM32 Custom Bootloader
+# STM32 Custom Bootloader
 
 
 
-\## Overview
+## Overview
 
 
 
-This project implements a \*\*custom bootloader for the STM32F407 microcontroller\*\* designed to support \*\*secure and reliable firmware updates\*\*. The bootloader allows new firmware to be uploaded through multiple communication interfaces and safely written to flash memory while ensuring firmware integrity.
+This project implements a **custom bootloader for the STM32F407 microcontroller** designed to support **secure and reliable firmware updates**. The bootloader allows new firmware to be uploaded through multiple communication interfaces and safely written to flash memory while ensuring firmware integrity.
 
 
 
-The system is built with \*\*modular components\*\* responsible for update management, verification, flash operations, and recovery mechanisms.
+The system is built with **modular components** responsible for update management, verification, flash operations, and recovery mechanisms.
 
 
 
@@ -18,21 +18,21 @@ This bootloader demonstrates core embedded firmware concepts including:
 
 
 
-\* Firmware update mechanisms
+* Firmware update mechanisms
 
-\* Flash memory management
+* Flash memory management
 
-\* Boot process control
+* Boot process control
 
-\* Data integrity verification
+* Data integrity verification
 
-\* Secure firmware validation
+* Secure firmware validation
 
-\* System recovery and watchdog handling
+* System recovery and watchdog handling
 
 
 
-The project is implemented using \*\*STM32CubeIDE and STM32 HAL drivers\*\*.
+The project is implemented using **STM32CubeIDE and STM32 HAL drivers**.
 
 
 
@@ -40,7 +40,7 @@ The project is implemented using \*\*STM32CubeIDE and STM32 HAL drivers\*\*.
 
 
 
-\# Target Hardware
+# Target Hardware
 
 
 
@@ -58,7 +58,7 @@ ARM Cortex-M4 core
 
 
 
-The bootloader resides at the \*\*start of flash memory\*\* and manages firmware execution.
+The bootloader resides at the **start of flash memory** and manages firmware execution.
 
 
 
@@ -66,7 +66,7 @@ The bootloader resides at the \*\*start of flash memory\*\* and manages firmware
 
 
 
-\# Bootloader Responsibilities
+# Bootloader Responsibilities
 
 
 
@@ -94,7 +94,7 @@ At system reset the bootloader performs the following operations:
 
 
 
-If the firmware is invalid or corrupted, the system enters \*\*recovery mode\*\*.
+If the firmware is invalid or corrupted, the system enters **recovery mode**.
 
 
 
@@ -102,7 +102,7 @@ If the firmware is invalid or corrupted, the system enters \*\*recovery mode\*\*
 
 
 
-\# Flash Memory Layout
+# Flash Memory Layout
 
 
 
@@ -173,7 +173,7 @@ End of Flash
 
 
 
-The \*\*bootloader never overwrites itself\*\*, ensuring safe firmware upgrades.
+The **bootloader never overwrites itself**, ensuring safe firmware upgrades.
 
 
 
@@ -181,11 +181,11 @@ The \*\*bootloader never overwrites itself\*\*, ensuring safe firmware upgrades.
 
 
 
-\# Firmware Update Flow
+# Firmware Update Flow
 
 
 
-The firmware update process is controlled by the \*\*Update Manager module\*\*.
+The firmware update process is controlled by the **Update Manager module**.
 
 
 
@@ -211,7 +211,7 @@ Update steps:
 
 
 
-This design allows \*\*atomic firmware upgrades\*\* and protects against corrupted updates.
+This design allows **atomic firmware upgrades** and protects against corrupted updates.
 
 
 
@@ -219,7 +219,7 @@ This design allows \*\*atomic firmware upgrades\*\* and protects against corrupt
 
 
 
-\# Boot Process
+# Boot Process
 
 
 
@@ -267,9 +267,9 @@ The bootloader transfers execution by:
 
 
 
-1\. Setting the \*\*Main Stack Pointer (MSP)\*\*
+1\. Setting the **Main Stack Pointer (MSP)**
 
-2\. Jumping to the \*\*application reset handler\*\*
+2\. Jumping to the **application reset handler**
 
 
 
@@ -277,7 +277,7 @@ The bootloader transfers execution by:
 
 
 
-\# Project Architecture
+# Project Architecture
 
 The core bootloader files are located in the `STM32CubeIDE/bootloader/` directory, specifically within `Src/` and `Inc/`. The main bootloader execution starts in `bootloader.c`.
 
@@ -297,49 +297,49 @@ STM32CubeIDE\\bootloader
 
 │
 
-├── update\_manager
+├── update_manager
 
 │   Coordinates firmware updates
 
 │
 
-├── uart\_update
+├── uart_update
 
 │   Firmware transfer via UART
 
 │
 
-├── can\_update
+├── can_update
 
 │   Firmware transfer via CAN
 
 │
 
-├── ota\_update
+├── ota_update
 
 │   OTA update framework
 
 │
 
-├── flash\_if
+├── flash_if
 
 │   Flash memory interface
 
 │
 
-├── firmware\_image
+├── firmware_image
 
 │   Image parsing and handling
 
 │
 
-├── crc\_verify
+├── crc_verify
 
 │   CRC integrity verification
 
 │
 
-├── crypto\_verify
+├── crypto_verify
 
 │   Cryptographic signature validation
 
@@ -351,13 +351,13 @@ STM32CubeIDE\\bootloader
 
 │
 
-├── recovery\_mode
+├── recovery_mode
 
 │   System recovery mechanisms
 
 │
 
-└── watchdog\_manager
+└── watchdog_manager
 
 &nbsp;   Watchdog control during update
 
@@ -365,7 +365,7 @@ STM32CubeIDE\\bootloader
 
 
 
-This modular architecture makes the bootloader \*\*scalable and maintainable\*\*.
+This modular architecture makes the bootloader **scalable and maintainable**.
 
 
 
@@ -373,11 +373,11 @@ This modular architecture makes the bootloader \*\*scalable and maintainable\*\*
 
 
 
-\# Key Modules
+# Key Modules
 
 
 
-\## Bootloader Core
+## Bootloader Core
 
 
 
@@ -389,13 +389,13 @@ Responsibilities:
 
 
 
-\* Boot decision logic
+* Boot decision logic
 
-\* Hardware initialization
+* Hardware initialization
 
-\* Application validation
+* Application validation
 
-\* Execution transfer
+* Execution transfer
 
 
 
@@ -403,7 +403,7 @@ Responsibilities:
 
 
 
-\## Update Manager
+## Update Manager
 
 
 
@@ -415,15 +415,15 @@ Responsibilities:
 
 
 
-\* Receive firmware
+* Receive firmware
 
-\* Write firmware to flash
+* Write firmware to flash
 
-\* Trigger verification
+* Trigger verification
 
-\* Update firmware metadata
+* Update firmware metadata
 
-\* Activate firmware slot
+* Activate firmware slot
 
 
 
@@ -431,7 +431,7 @@ Responsibilities:
 
 
 
-\## UART Update
+## UART Update
 
 
 
@@ -443,11 +443,11 @@ Responsibilities:
 
 
 
-\* Packet reception
+* Packet reception
 
-\* Data buffering
+* Data buffering
 
-\* Error handling
+* Error handling
 
 
 
@@ -455,7 +455,7 @@ Responsibilities:
 
 
 
-\## CAN Update
+## CAN Update
 
 
 
@@ -467,7 +467,7 @@ Allows firmware updates through CAN bus for distributed embedded systems.
 
 
 
-\## OTA Update
+## OTA Update
 
 
 
@@ -479,7 +479,7 @@ Framework for wireless firmware updates through external communication modules.
 
 
 
-\## Flash Interface
+## Flash Interface
 
 
 
@@ -491,11 +491,11 @@ Functions include:
 
 
 
-\* Flash erase
+* Flash erase
 
-\* Flash programming
+* Flash programming
 
-\* Flash read operations
+* Flash read operations
 
 
 
@@ -503,7 +503,7 @@ Functions include:
 
 
 
-\## Firmware Image Manager
+## Firmware Image Manager
 
 
 
@@ -511,11 +511,11 @@ Handles firmware structure including:
 
 
 
-\* Image header parsing
+* Image header parsing
 
-\* Image size validation
+* Image size validation
 
-\* Image metadata extraction
+* Image metadata extraction
 
 
 
@@ -523,7 +523,7 @@ Handles firmware structure including:
 
 
 
-\## CRC Verification
+## CRC Verification
 
 
 
@@ -563,11 +563,11 @@ If mismatch occurs the update is rejected.
 
 
 
-\## Cryptographic Verification
+## Cryptographic Verification
 
 
 
-Uses \*\*mbedTLS\*\* to verify firmware authenticity.
+Uses **mbedTLS** to verify firmware authenticity.
 
 
 
@@ -575,9 +575,9 @@ Supports:
 
 
 
-\* Digital signature verification
+* Digital signature verification
 
-\* Secure firmware validation
+* Secure firmware validation
 
 
 
@@ -589,7 +589,7 @@ This prevents unauthorized firmware execution.
 
 
 
-\## Metadata Manager
+## Metadata Manager
 
 
 
@@ -597,15 +597,15 @@ Maintains firmware information such as:
 
 
 
-\* Active slot
+* Active slot
 
-\* Firmware version
+* Firmware version
 
-\* Firmware size
+* Firmware size
 
-\* CRC checksum
+* CRC checksum
 
-\* Update state
+* Update state
 
 
 
@@ -617,7 +617,7 @@ Metadata enables safe boot decisions.
 
 
 
-\## Recovery Mode
+## Recovery Mode
 
 
 
@@ -625,11 +625,11 @@ If firmware validation fails:
 
 
 
-\* Bootloader prevents application execution
+* Bootloader prevents application execution
 
-\* System enters recovery mode
+* System enters recovery mode
 
-\* New firmware can be uploaded
+* New firmware can be uploaded
 
 
 
@@ -637,7 +637,7 @@ If firmware validation fails:
 
 
 
-\## Watchdog Manager
+## Watchdog Manager
 
 
 
@@ -649,7 +649,7 @@ Prevents system reset during long firmware updates by refreshing watchdog timers
 
 
 
-\# Security Features
+# Security Features
 
 
 
@@ -657,13 +657,13 @@ The bootloader implements several security mechanisms:
 
 
 
-\* CRC validation
+* CRC validation
 
-\* Cryptographic signature verification
+* Cryptographic signature verification
 
-\* Firmware authenticity checking
+* Firmware authenticity checking
 
-\* Protected bootloader region
+* Protected bootloader region
 
 
 
@@ -675,7 +675,7 @@ These features protect the system from corrupted or malicious firmware.
 
 
 
-\# Development Environment
+# Development Environment
 
 
 
@@ -697,7 +697,7 @@ Git
 
 
 
-\# Building the Project
+# Building the Project
 
 
 
@@ -719,7 +719,7 @@ Steps to build:
 
 
 
-\# Firmware Upload
+# Firmware Upload
 
 
 
@@ -727,11 +727,11 @@ Firmware images can be uploaded using:
 
 
 
-\* UART interface
+* UART interface
 
-\* CAN interface ( Under Development )
+* CAN interface ( Under Development )
 
-\* OTA interface ( Under Development )
+* OTA interface ( Under Development )
 
 
 
@@ -743,7 +743,7 @@ The host sends the firmware image which is then written to the inactive flash sl
 
 
 
-\# Future Improvements
+# Future Improvements
 
 
 
@@ -765,7 +765,7 @@ Planned enhancements:
 
 
 
-\# Author
+# Author
 
 
 
@@ -781,7 +781,7 @@ Embedded Systems and Firmware Development
 
 
 
-\# License
+# License
 
 
 
