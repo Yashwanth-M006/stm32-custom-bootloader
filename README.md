@@ -132,77 +132,44 @@ Example layout:
 
 
 
+```text
 Flash Memory (1 MB)
-
 -------------------------------------------------
 
-
-
 0x08000000
-
 +---------------------------------------------+
-
 |                Bootloader                   |
-
 |            (Boot code region)               |
-
 |               ~64 KB                        |
-
 +---------------------------------------------+
-
-
 
 0x08010000
-
 +---------------------------------------------+
-
 |                Metadata                     |
-
-|       Firmware version / CRC / status      |
-
+|       Firmware version / CRC / status       |
 +---------------------------------------------+
-
-
 
 0x08011000
-
 +---------------------------------------------+
-
 |           Application Slot A                |
-
 |           Active Firmware                   |
-
 |               ~448 KB                       |
-
 +---------------------------------------------+
-
-
 
 0x08080000
-
 +---------------------------------------------+
-
 |           Application Slot B                |
-
 |           Update Firmware                   |
-
 |               ~448 KB                       |
-
 +---------------------------------------------+
-
-
 
 0x080F0000
-
 +---------------------------------------------+
-
 |         Reserved / Configuration            |
-
 +---------------------------------------------+
-
-
 
 End of Flash
+```
 
 
 
@@ -312,9 +279,9 @@ The bootloader transfers execution by:
 
 \# Project Architecture
 
+The core bootloader files are located in the `STM32CubeIDE/bootloader/` directory, specifically within `Src/` and `Inc/`. The main bootloader execution starts in `bootloader.c`.
 
-
-The project is organized into modular components.
+The project is organized into modular components:
 
 
 
@@ -784,15 +751,13 @@ Planned enhancements:
 
 
 
-\* AES encrypted firmware updates
+* AES encrypted firmware updates
 
-\* Secure boot with hardware root of trust
+* Secure boot with hardware root of trust
 
-\* Firmware rollback protection
+* OTA update server integration
 
-\* OTA update server integration
-
-\* Version management system
+* Version management system
 
 
 
