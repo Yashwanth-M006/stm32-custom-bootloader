@@ -113,19 +113,12 @@ The flash memory is divided into regions for bootloader and application slots.
 Example layout:
 
 
-
 | Memory Region      | Address Range    | Purpose              |
-
 | ------------------ | ---------------- | -------------------- |
-
 | Bootloader         | 0x08000000       | Bootloader firmware  |
-
 | Metadata           | After bootloader | Firmware metadata    |
-
 | Application Slot A |                  | Active firmware      |
-
 | Application Slot B |                  | Update slot          |
-
 | Configuration      |                  | System configuration |
 
 
@@ -235,27 +228,27 @@ Boot sequence:
 
 Reset
 
-&nbsp;  │
+   │
 
-&nbsp;  ▼
+   ▼
 
 Bootloader starts
 
-&nbsp;  │
+   │
 
-&nbsp;  ├─ Check update request
+   ├─ Check update request
 
-&nbsp;  │
+   │
 
-&nbsp;  ├─ Validate firmware image
+   ├─ Validate firmware image
 
-&nbsp;  │
+   │
 
-&nbsp;  ├─ Enter recovery mode (if invalid)
+   ├─ Enter recovery mode (if invalid)
 
-&nbsp;  │
+   │
 
-&nbsp;  ▼
+   ▼
 
 Jump to application firmware
 
@@ -359,7 +352,7 @@ STM32CubeIDE\\bootloader
 
 └── watchdog_manager
 
-&nbsp;   Watchdog control during update
+    Watchdog control during update
 
 ```
 
@@ -539,15 +532,15 @@ Process:
 
 Firmware received
 
-&nbsp;     │
+      │
 
-&nbsp;     ▼
+      ▼
 
 Compute CRC
 
-&nbsp;     │
+      │
 
-&nbsp;     ▼
+      ▼
 
 Compare with expected CRC
 
