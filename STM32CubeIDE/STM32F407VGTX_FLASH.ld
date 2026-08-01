@@ -46,8 +46,11 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 MEMORY
 {
   CCMRAM    (xrw)    : ORIGIN = 0x10000000,   LENGTH = 64K
-  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
-  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 1024K
+  RAM       (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
+  FLASH     (rx)     : ORIGIN = 0x08000000,   LENGTH = 64K    /* Bootloader (Sectors 0-3) */
+  METADATA  (r)      : ORIGIN = 0x08010000,   LENGTH = 4K     /* Metadata (Start of Sector 4) */
+  SLOT_A    (rx)     : ORIGIN = 0x08011000,   LENGTH = 448K   /* Active App */
+  SLOT_B    (rx)     : ORIGIN = 0x08080000,   LENGTH = 448K   /* Update App (Sectors 8-11) */
 }
 
 /* Sections */

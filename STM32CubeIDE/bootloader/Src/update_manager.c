@@ -144,7 +144,20 @@ UpdateStatus_t UpdateManager_Receive(void)
 UpdateStatus_t UpdateManager_Finalize(void)
 {
     if(Firmware_Validate(inactive_slot_addr) == FW_STATUS_VALID)
+    {
+        uint32_t active_slot = Metadata_GetActiveSlot();
+        FirmwareInfo_t active_info = (active_slot == SLOT_A) ? Metadata_GetSlotA() : Metadata_GetSlotB();
+        
+        FirmwareHeader_t *new_header = Firmware_ReadHeader(inactive_slot_addr);
+        
+        /* Rollback Protection Check */
+        if(new_header->version < active_info.version)
+        {
+            return UPDATE_ROLLBACK_DETECTED;
+        }
+
         return UPDATE_OK;
+    }
 
     return UPDATE_INVALID_FIRMWARE;
 }
@@ -155,10 +168,25 @@ UpdateStatus_t UpdateManager_Finalize(void)
 
 void UpdateManager_Activate(void)
 {
-    if(inactive_slot_addr == SLOT_A_START_ADDR)
-        Metadata_SetActiveSlot(SLOT_A);
-    else
-        Metadata_SetActiveSlot(SLOT_B);
+    FirmwareHeader_t *new_header = Firmware_ReadHeader(inactive_slot_addr);
+    FirmwareMetadata_t meta = Metadata_Read();
 
-    Metadata_ResetBootAttempts();
+    if(inactive_slot_addr == SLOT_A_START_ADDR)
+    {
+        meta.active_slot = SLOT_A;
+        meta.slotA.crc = new_header->crc;
+        meta.slotA.size = new_header->image_size;
+        meta.slotA.version = new_header->version;
+    }
+    else
+    {
+        meta.active_slot = SLOT_B;
+        meta.slotB.crc = new_header->crc;
+        meta.slotB.size = new_header->image_size;
+        meta.slotB.version = new_header->version;
+    }
+
+    meta.boot_attempts = MAX_BOOT_ATTEMPTS;
+
+    Metadata_Write(&meta);
 }

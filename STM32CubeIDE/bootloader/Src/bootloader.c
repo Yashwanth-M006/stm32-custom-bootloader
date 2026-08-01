@@ -69,6 +69,15 @@ void Bootloader_JumpToApplication(uint32_t app_addr)
 
     __disable_irq();
 
+    /* De-initialize Peripherals */
+    HAL_DeInit();
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL  = 0;
+
+    /* Vector Table Relocation */
+    SCB->VTOR = app_addr;
+
 
     /* Get stack pointer */
 
