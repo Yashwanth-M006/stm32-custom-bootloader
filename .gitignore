@@ -7,3 +7,6 @@ Binaries/
 *.map
 *.o
 *.log
+
+# Ignore interview documentation
+Interview_Questions.txt

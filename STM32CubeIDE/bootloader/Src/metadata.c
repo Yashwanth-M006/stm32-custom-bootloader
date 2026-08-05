@@ -17,20 +17,26 @@ void Metadata_Init(void)
 {
     FirmwareMetadata_t meta = Metadata_Read();
 
-    /* If flash is empty initialize metadata */
-
-    if(meta.active_slot != SLOT_A && meta.active_slot != SLOT_B)
+    /*
+     * Validate by magic number first.
+     * The active_slot range check alone is not enough: a partially
+     * corrupted block could have a valid-looking active_slot value
+     * (0 or 1) but garbage everywhere else.
+     */
+    if(meta.magic != METADATA_MAGIC ||
+       (meta.active_slot != SLOT_A && meta.active_slot != SLOT_B))
     {
-        meta.active_slot = SLOT_A;
+        meta.magic         = METADATA_MAGIC;
+        meta.active_slot   = SLOT_A;
         meta.boot_attempts = MAX_BOOT_ATTEMPTS;
 
-        meta.slotA.crc = 0;
-        meta.slotA.size = 0;
-        meta.slotA.version = 0;
+        meta.slotA.crc     = 0U;
+        meta.slotA.size    = 0U;
+        meta.slotA.version = 0U;
 
-        meta.slotB.crc = 0;
-        meta.slotB.size = 0;
-        meta.slotB.version = 0;
+        meta.slotB.crc     = 0U;
+        meta.slotB.size    = 0U;
+        meta.slotB.version = 0U;
 
         Metadata_Write(&meta);
     }
@@ -50,7 +56,11 @@ FirmwareMetadata_t Metadata_Read(void)
 
 void Metadata_Write(FirmwareMetadata_t *meta)
 {
-    FLASH_Erase(METADATA_ADDR, sizeof(FirmwareMetadata_t));
+    if(FLASH_Erase(METADATA_ADDR, sizeof(FirmwareMetadata_t)) != FLASH_OK)
+    {
+        /* Erase failed — do not attempt write, metadata stays unchanged */
+        return;
+    }
 
     FLASH_Write(METADATA_ADDR,
                 (uint8_t*)meta,

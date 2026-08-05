@@ -5,9 +5,6 @@
  *      Author: Yashwanth
  */
 
-#ifndef BOOTLOADER_SRC_BOOTLOADER_C_
-#define BOOTLOADER_SRC_BOOTLOADER_C_
-
 #include "bootloader.h"
 #include "bootloader_config.h"
 #include "update_manager.h"
@@ -18,6 +15,7 @@
 #include "uart_update.h"
 #include "can_update.h"
 #include "ota_update.h"
+#include "firmware_image.h"
 
 
 
@@ -109,15 +107,55 @@ void Bootloader_JumpToApplication(uint32_t app_addr)
 void Bootloader_Rollback(void)
 {
     uint32_t active = Metadata_GetActiveSlot();
+    uint32_t fallback_slot;
+    uint32_t fallback_addr;
 
+    /* Determine the other slot */
     if(active == SLOT_A)
     {
-        Metadata_SetActiveSlot(SLOT_B);
+        fallback_slot = SLOT_B;
+        fallback_addr = SLOT_B_START_ADDR;
     }
     else
     {
-        Metadata_SetActiveSlot(SLOT_A);
+        fallback_slot = SLOT_A;
+        fallback_addr = SLOT_A_START_ADDR;
     }
+
+    /* Only switch if the fallback slot actually contains valid firmware */
+    if(Firmware_Validate(fallback_addr) == FW_STATUS_VALID)
+    {
+        Metadata_SetActiveSlot(fallback_slot);
+        Metadata_ResetBootAttempts();
+    }
+    /* If fallback is also invalid, stay on current slot — force update path
+       in Bootloader_Run() will handle it */
+}
+
+
+
+/* ------------------------------------------------ */
+/* Helper: run a full UART update cycle             */
+/* ------------------------------------------------ */
+
+static void RunRecoveryUpdate(void)
+{
+    UpdateManager_Init();
+
+    if(UpdateManager_Start() == UPDATE_OK)
+    {
+        if(UpdateManager_Receive() == UPDATE_OK)
+        {
+            if(UpdateManager_Finalize() == UPDATE_OK)
+            {
+                UpdateManager_Activate();
+                Metadata_ResetBootAttempts();
+            }
+        }
+    }
+
+    /* Always reset so the new (or unchanged) firmware is booted cleanly */
+    HAL_NVIC_SystemReset();
 }
 
 
@@ -132,29 +170,31 @@ void Bootloader_Run(void)
     uint32_t slot_addr;
 
 
+    /* -------- UART trigger window (BOOT_TIMEOUT_MS) -------- */
+    /*
+     * Wait up to BOOT_TIMEOUT_MS for a CMD_START_UPDATE byte on UART.
+     * This allows a host tool to trigger a software-initiated update
+     * without needing to physically toggle the recovery GPIO pin.
+     * If no trigger arrives within the window, boot continues normally.
+     */
+    {
+        uint8_t trigger = 0U;
+        if(UART_Update_ReceiveTimeout(&trigger, 1U, BOOT_TIMEOUT_MS) &&
+           trigger == CMD_START_UPDATE)
+        {
+            RunRecoveryUpdate();
+            /* RunRecoveryUpdate() calls SystemReset — never returns */
+        }
+    }
 
-    /* -------- Recovery mode (UART update) -------- */
+
+    /* -------- Recovery mode (forced UART update via GPIO pin) -------- */
 
     if(Recovery_IsRequested())
     {
-        UpdateManager_Init();
-
-        if(UpdateManager_Start() == UPDATE_OK)
-        {
-            /* Receive firmware via UART */
-
-            if(UpdateManager_Receive() == UPDATE_OK)
-            {
-                if(UpdateManager_Finalize() == UPDATE_OK)
-                {
-                    UpdateManager_Activate();
-                }
-            }
-        }
-
-        HAL_NVIC_SystemReset();
+        RunRecoveryUpdate();
+        /* RunRecoveryUpdate() calls SystemReset — never returns */
     }
-
 
 
     /* -------- Normal boot -------- */
@@ -167,44 +207,49 @@ void Bootloader_Run(void)
         slot_addr = SLOT_B_START_ADDR;
 
 
+    /* Check boot attempt counter — if exhausted, force rollback */
 
-    /* Validate firmware */
-
-    if(Firmware_Validate(slot_addr) == FW_STATUS_VALID)
+    if(Metadata_GetBootAttempts() == 0U)
     {
-        Bootloader_JumpToApplication(
-            slot_addr + sizeof(FirmwareHeader_t));
+        Bootloader_Rollback();
+        HAL_NVIC_SystemReset();
+        /* After reset, the counter is fresh (reset by Rollback) and the
+           other slot will be tried */
     }
 
 
+    /* Validate and boot active slot */
 
-    /* -------- Try rollback -------- */
+    if(Firmware_Validate(slot_addr) == FW_STATUS_VALID)
+    {
+        /* Decrement counter before jumping so a crash-loop is detected */
+        Metadata_DecrementBootAttempts();
+
+        Bootloader_JumpToApplication(slot_addr + sizeof(FirmwareHeader_t));
+        /* Never returns */
+    }
+
+
+    /* -------- Active slot invalid — try rollback -------- */
 
     if(active_slot == SLOT_A)
         slot_addr = SLOT_B_START_ADDR;
     else
         slot_addr = SLOT_A_START_ADDR;
 
-
-
     if(Firmware_Validate(slot_addr) == FW_STATUS_VALID)
     {
-        Metadata_SetActiveSlot(
-            (active_slot == SLOT_A) ? SLOT_B : SLOT_A);
+        Metadata_SetActiveSlot((active_slot == SLOT_A) ? SLOT_B : SLOT_A);
+        Metadata_ResetBootAttempts();
+        Metadata_DecrementBootAttempts();
 
-        Bootloader_JumpToApplication(
-            slot_addr + sizeof(FirmwareHeader_t));
+        Bootloader_JumpToApplication(slot_addr + sizeof(FirmwareHeader_t));
+        /* Never returns */
     }
 
 
+    /* -------- Both slots invalid → force UART update -------- */
 
-    /* -------- Both slots invalid → force update -------- */
-
-    UpdateManager_Init();
-
-    UpdateManager_Start();
-
-    UpdateManager_Receive();
+    RunRecoveryUpdate();
+    /* RunRecoveryUpdate() calls SystemReset — never returns */
 }
-
-#endif /* BOOTLOADER_SRC_BOOTLOADER_C_ */

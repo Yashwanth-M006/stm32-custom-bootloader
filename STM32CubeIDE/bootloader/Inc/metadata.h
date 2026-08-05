@@ -11,39 +11,41 @@
 
 #include "utils.h"
 #include "memory_map.h"
+#include "bootloader_config.h"   /* MAX_BOOT_ATTEMPTS, single source */
 
 /*
-Address        Field
---------------------------------
-0x080D0000     active_slot
-0x080D0004     boot_attempts
+ * Flash layout of FirmwareMetadata_t at METADATA_ADDR (0x080E0000, Sector 11):
+ *
+ * Offset   Field
+ * -------  ------------
+ * +0x00    magic            (must == METADATA_MAGIC to be considered valid)
+ * +0x04    active_slot
+ * +0x08    boot_attempts
+ * +0x0C    slotA.crc
+ * +0x10    slotA.size
+ * +0x14    slotA.version
+ * +0x18    slotB.crc
+ * +0x1C    slotB.size
+ * +0x20    slotB.version
+ *
+ * Total struct size = 36 bytes
+ */
 
-0x080D0008     slotA_crc
-0x080D000C     slotA_size
-0x080D0010     slotA_version
 
-0x080D0014     slotB_crc
-0x080D0018     slotB_size
-0x080D001C     slotB_version
+/* Magic value that identifies a valid, completely-written metadata block.
+ * On a blank / corrupted flash the magic will not match and Metadata_Init()
+ * will re-initialize the struct to safe defaults. */
 
-
-total size  = 28 bytes
-*/
-
-
+#define METADATA_MAGIC  0xB007AB1EU
 
 
 /* Slot identifiers */
 
-#define SLOT_A 0
-#define SLOT_B 1
-
-/* Maximum boot attempts before rollback */
-
-#define MAX_BOOT_ATTEMPTS 3
+#define SLOT_A  0U
+#define SLOT_B  1U
 
 
-/* Firmware information for a slot */
+/* Firmware information for a single slot */
 
 typedef struct
 {
@@ -54,12 +56,13 @@ typedef struct
 } FirmwareInfo_t;
 
 
-/* Metadata stored in flash */
+/* Metadata block stored in flash (Sector 11) */
 
 typedef struct
 {
-    uint32_t active_slot;
-    uint32_t boot_attempts;
+    uint32_t magic;           /* METADATA_MAGIC — validity sentinel    */
+    uint32_t active_slot;     /* SLOT_A or SLOT_B                      */
+    uint32_t boot_attempts;   /* Counts down; rollback at 0            */
 
     FirmwareInfo_t slotA;
     FirmwareInfo_t slotB;

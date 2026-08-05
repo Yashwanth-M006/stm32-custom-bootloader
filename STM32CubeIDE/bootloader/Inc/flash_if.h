@@ -12,13 +12,25 @@
 #include "memory_map.h"
 
 
-#define FLASH_WRITE_OK     0
-#define FLASH_WRITE_ERROR  1
+/* Return codes */
+
+#define FLASH_OK     0U
+#define FLASH_ERROR  1U
 
 
-void FLASH_Erase(uint32_t addr, uint32_t size);
+/* Erase sectors covering [addr, addr+size) */
+
+uint8_t FLASH_Erase(uint32_t addr, uint32_t size);
+
+
+/* Write len bytes from data[] to flash starting at addr */
+
 uint8_t FLASH_Write(uint32_t addr, uint8_t *data, uint32_t len);
-uint8_t FLASH_Read(uint32_t addr);
+
+
+/* Read a single 32-bit word directly from flash */
+
+uint32_t FLASH_ReadWord(uint32_t addr);
 
 
 

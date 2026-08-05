@@ -13,8 +13,19 @@
 
 /********************************** Config *******************************************/
 
-#define BOOT_TIMEOUT_MS      3000
-#define BOOT_ATTEMPTS_MAX    3
+/*
+ * BOOT_TIMEOUT_MS — how long (in ms) Bootloader_Run() waits for a UART
+ * trigger byte (CMD_START_UPDATE) before proceeding with normal boot.
+ * Set to 0 to disable the UART trigger window.
+ */
+#define BOOT_TIMEOUT_MS      3000U
+
+/*
+ * MAX_BOOT_ATTEMPTS — number of times a slot is tried before the
+ * bootloader assumes it is crash-looping and triggers a rollback.
+ * Single definition; metadata.h #includes this file to reference it.
+ */
+#define MAX_BOOT_ATTEMPTS    3U
 
 /********************************** State Machine **************************************/
 

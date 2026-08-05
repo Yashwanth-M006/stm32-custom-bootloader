@@ -18,11 +18,12 @@
 
 
 static uint32_t inactive_slot_addr;
+static uint32_t inactive_slot_size;   /* correct size for the inactive slot */
 static uint32_t write_address;
 
 
 
-/* Determine inactive slot */
+/* Determine inactive slot address and size */
 
 static uint32_t UpdateManager_GetInactiveSlot(void)
 {
@@ -33,26 +34,37 @@ static uint32_t UpdateManager_GetInactiveSlot(void)
 }
 
 
+static uint32_t UpdateManager_GetInactiveSlotSize(void)
+{
+    if(Metadata_GetActiveSlot() == SLOT_A)
+        return SLOT_B_SIZE;
+    else
+        return SLOT_A_SIZE;
+}
+
+
 
 /* Initialize */
 
 void UpdateManager_Init(void)
 {
     inactive_slot_addr = UpdateManager_GetInactiveSlot();
-    write_address = inactive_slot_addr;
+    inactive_slot_size = UpdateManager_GetInactiveSlotSize();
+    write_address      = inactive_slot_addr;
 }
 
 
 
-/* Start update */
+/* Start update — erase the inactive slot */
 
 UpdateStatus_t UpdateManager_Start(void)
 {
     inactive_slot_addr = UpdateManager_GetInactiveSlot();
+    inactive_slot_size = UpdateManager_GetInactiveSlotSize();
+    write_address      = inactive_slot_addr;
 
-    write_address = inactive_slot_addr;
-
-    FLASH_Erase(inactive_slot_addr, SLOT_A_SIZE);
+    if(FLASH_Erase(inactive_slot_addr, inactive_slot_size) != FLASH_OK)
+        return UPDATE_ERROR;
 
     return UPDATE_OK;
 }
@@ -86,19 +98,29 @@ static uint8_t UpdateManager_ReadPacket(UART_Packet_t *pkt)
 
 /* Receive firmware */
 
+#define MAX_READ_ERRORS  3U   /* consecutive malformed packets before aborting */
+
 UpdateStatus_t UpdateManager_Receive(void)
 {
     UART_Packet_t packet;
-
     uint32_t calc_crc;
+    uint8_t  read_errors = 0U;   /* consecutive bad-frame counter */
 
     while(1)
     {
         if(!UpdateManager_ReadPacket(&packet))
         {
+            /* Malformed frame (wrong start byte, oversized length, or
+             * UART timeout). Send NACK and ask the sender to retry.
+             * Only abort after MAX_READ_ERRORS consecutive failures so
+             * a single noise burst does not kill a half-written update. */
             UART_Send_NACK();
-            return UPDATE_INVALID_PACKET;
+            read_errors++;
+            if(read_errors >= MAX_READ_ERRORS)
+                return UPDATE_INVALID_PACKET;
+            continue;
         }
+        read_errors = 0U;   /* reset on any successfully framed packet */
 
 
         if(packet.cmd == CMD_START_UPDATE)
@@ -115,6 +137,13 @@ UpdateStatus_t UpdateManager_Receive(void)
             {
                 UART_Send_NACK();
                 continue;
+            }
+
+            /* Bounds check — reject data that would overflow the slot */
+            if((write_address + packet.length) > (inactive_slot_addr + inactive_slot_size))
+            {
+                UART_Send_NACK();
+                return UPDATE_ERROR;
             }
 
             FLASH_Write(write_address,
@@ -147,10 +176,16 @@ UpdateStatus_t UpdateManager_Finalize(void)
     {
         uint32_t active_slot = Metadata_GetActiveSlot();
         FirmwareInfo_t active_info = (active_slot == SLOT_A) ? Metadata_GetSlotA() : Metadata_GetSlotB();
-        
+
         FirmwareHeader_t *new_header = Firmware_ReadHeader(inactive_slot_addr);
-        
-        /* Rollback Protection Check */
+
+        /*
+         * Anti-rollback: reject images older than the currently installed firmware.
+         *
+         * Edge case — first flash: active_info.version is 0 (metadata just
+         * initialised) so any firmware version >= 0 passes. This is intentional;
+         * there is no "previous" firmware to protect against on a blank device.
+         */
         if(new_header->version < active_info.version)
         {
             return UPDATE_ROLLBACK_DETECTED;
@@ -171,18 +206,21 @@ void UpdateManager_Activate(void)
     FirmwareHeader_t *new_header = Firmware_ReadHeader(inactive_slot_addr);
     FirmwareMetadata_t meta = Metadata_Read();
 
+    /* Always carry the magic forward so the block stays valid */
+    meta.magic = METADATA_MAGIC;
+
     if(inactive_slot_addr == SLOT_A_START_ADDR)
     {
         meta.active_slot = SLOT_A;
-        meta.slotA.crc = new_header->crc;
-        meta.slotA.size = new_header->image_size;
+        meta.slotA.crc     = new_header->crc;
+        meta.slotA.size    = new_header->image_size;
         meta.slotA.version = new_header->version;
     }
     else
     {
         meta.active_slot = SLOT_B;
-        meta.slotB.crc = new_header->crc;
-        meta.slotB.size = new_header->image_size;
+        meta.slotB.crc     = new_header->crc;
+        meta.slotB.size    = new_header->image_size;
         meta.slotB.version = new_header->version;
     }
 

@@ -39,8 +39,8 @@ ECDSA (Elliptic Curve Digital Signature Algorithm)
 uint8_t Crypto_VerifyFirmware(uint32_t firmware_addr, uint32_t firmware_size, uint8_t *signature);
 
 
-/* Compute SHA256 hash */
-void Crypto_SHA256(uint8_t *data, uint32_t length, uint8_t *hash_out);
+/* Compute SHA256 hash — returns 0 on success, mbedTLS error code on failure */
+int Crypto_SHA256(uint8_t *data, uint32_t length, uint8_t *hash_out);
 
 
 

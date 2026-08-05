@@ -47,10 +47,18 @@ MEMORY
 {
   CCMRAM    (xrw)    : ORIGIN = 0x10000000,   LENGTH = 64K
   RAM       (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
-  FLASH     (rx)     : ORIGIN = 0x08000000,   LENGTH = 64K    /* Bootloader (Sectors 0-3) */
-  METADATA  (r)      : ORIGIN = 0x08010000,   LENGTH = 4K     /* Metadata (Start of Sector 4) */
-  SLOT_A    (rx)     : ORIGIN = 0x08011000,   LENGTH = 448K   /* Active App */
-  SLOT_B    (rx)     : ORIGIN = 0x08080000,   LENGTH = 448K   /* Update App (Sectors 8-11) */
+
+  /* Bootloader — Sectors 0-3 (4x16KB = 64KB) */
+  FLASH     (rx)     : ORIGIN = 0x08000000,   LENGTH = 64K
+
+  /* Slot A — Sectors 4-7 (64+128+128+128 = 448KB) */
+  SLOT_A    (rx)     : ORIGIN = 0x08010000,   LENGTH = 448K
+
+  /* Slot B — Sectors 8-10 (3x128KB = 384KB) */
+  SLOT_B    (rx)     : ORIGIN = 0x08080000,   LENGTH = 384K
+
+  /* Metadata — Sector 11 (128KB, fully isolated from both slots) */
+  METADATA  (r)      : ORIGIN = 0x080E0000,   LENGTH = 128K
 }
 
 /* Sections */

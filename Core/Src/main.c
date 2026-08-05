@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "bootloader.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,6 +96,10 @@ int main(void)
   MX_IWDG_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  /* Bootloader entry — this call should never return */
+  Bootloader_Init();
+  Bootloader_Run();
 
   /* USER CODE END 2 */
 
@@ -231,7 +235,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin : Recovery_mode_Pin */
   GPIO_InitStruct.Pin = Recovery_mode_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;   /* Must match recovery_mode.c */
   HAL_GPIO_Init(Recovery_mode_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */

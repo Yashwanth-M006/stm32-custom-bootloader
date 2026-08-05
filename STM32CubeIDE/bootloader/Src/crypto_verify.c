@@ -40,21 +40,31 @@ static const uint8_t PUBLIC_KEY_Y[32] =
 /* SHA256 calculation                               */
 /* ------------------------------------------------ */
 
-void Crypto_SHA256(uint8_t *data,
-                   uint32_t length,
-                   uint8_t *hash_out)
+/*
+ * Returns 0 on success, non-zero on mbedTLS error.
+ * Callers MUST check the return value — a non-zero result means
+ * hash_out is invalid and must not be used for signature verification.
+ */
+int Crypto_SHA256(uint8_t *data,
+                  uint32_t length,
+                  uint8_t *hash_out)
 {
     mbedtls_sha256_context ctx;
+    int ret;
 
     mbedtls_sha256_init(&ctx);
 
-    mbedtls_sha256_starts_ret(&ctx, 0);
+    ret = mbedtls_sha256_starts_ret(&ctx, 0 /* 0 = SHA-256, 1 = SHA-224 */);
+    if(ret != 0) { mbedtls_sha256_free(&ctx); return ret; }
 
-    mbedtls_sha256_update_ret(&ctx, data, length);
+    ret = mbedtls_sha256_update_ret(&ctx, data, length);
+    if(ret != 0) { mbedtls_sha256_free(&ctx); return ret; }
 
-    mbedtls_sha256_finish_ret(&ctx, hash_out);
+    ret = mbedtls_sha256_finish_ret(&ctx, hash_out);
 
     mbedtls_sha256_free(&ctx);
+
+    return ret;
 }
 
 
@@ -70,11 +80,12 @@ uint8_t Crypto_VerifyFirmware(uint32_t firmware_addr,
 
     uint8_t *firmware = (uint8_t*)firmware_addr;
 
-    /* Compute firmware hash */
+    /* Compute firmware hash — abort if hashing fails */
 
-    Crypto_SHA256(firmware,
-                  firmware_size,
-                  hash);
+    if(Crypto_SHA256(firmware, firmware_size, hash) != 0)
+    {
+        return 0;   /* hash computation failed */
+    }
 
     mbedtls_ecdsa_context ctx;
     mbedtls_ecp_point Q;
